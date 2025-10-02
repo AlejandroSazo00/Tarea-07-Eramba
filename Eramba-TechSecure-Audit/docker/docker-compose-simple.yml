@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  eramba:
+    image: ghcr.io/eramba/eramba:latest
+    container_name: eramba
+    ports:
+      - "8080:80"
+      - "8443:443"
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_DATABASE=eramba
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpass
+      - CACHE_URL=Redis://?server=host.docker.internal&port=6379&password=&timeout=3
+      - PUBLIC_ADDRESS=https://localhost:8443
+      - DOCKER_DEPLOYMENT=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-eramba
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=eramba
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=""
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: redis-eramba
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

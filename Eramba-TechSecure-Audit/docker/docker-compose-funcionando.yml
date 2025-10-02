@@ -1,0 +1,55 @@
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password --sql_mode=""
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: docker
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: password
+    volumes:
+      - db-data:/var/lib/mysql
+
+  redis:
+    container_name: redis
+    image: redis:7.4.2-alpine
+    restart: always
+
+  eramba:
+    container_name: eramba
+    image: ghcr.io/eramba/eramba:latest
+    restart: always
+    ports:
+      - 8443:443
+    environment:
+      DB_HOST: mysql
+      DB_DATABASE: docker
+      DB_USERNAME: docker
+      DB_PASSWORD: password
+      CACHE_URL: "Redis://?server=redis&port=6379&password=&timeout=3"
+      USE_PROXY: "0"
+      PROXY_HOST: ""
+      PROXY_PORT: ""
+      USE_PROXY_AUTH: "0"
+      PROXY_AUTH_USER: ""
+      PROXY_AUTH_PASS: ""
+      PUBLIC_ADDRESS: "https://localhost:8443"
+      DOCKER_DEPLOYMENT: "1"
+      LDAPTLS_REQCERT: "never"
+    volumes:
+      - data:/var/www/eramba/app/upgrade/data
+      - app:/var/www/eramba
+      - logs:/var/www/eramba/app/upgrade/logs
+    links:
+      - mysql
+      - redis
+    depends_on:
+      - mysql
+
+volumes:
+  app:
+  data:
+  logs:
+  db-data:
